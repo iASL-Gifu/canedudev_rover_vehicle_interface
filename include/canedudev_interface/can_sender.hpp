@@ -23,7 +23,7 @@ class ControlCommand : public rclcpp::Node
         bool is_engage_;
         bool is_drive_;
         bool is_reverse_;
-        bool engage_cmd_;
+        bool engage_cmd_ = false;
         rclcpp::Publisher<can_msgs::msg::Frame>::SharedPtr can_frame_pub_;
         rclcpp::TimerBase::SharedPtr timer_;
         uint16_t steer_cmd_;

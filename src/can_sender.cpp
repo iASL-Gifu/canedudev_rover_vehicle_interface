@@ -30,12 +30,12 @@ void ControlCommand::onControlModeRequest(
       engage_cmd_ = true;
       response->success = true;
       return;
-    case autoware_auto_vehicle_msgs::srv::ControlModeCommand::Requestk::MANUAL:
-      is_engage_ = false;
+    case autoware_auto_vehicle_msgs::srv::ControlModeCommand::Request::MANUAL:
+      engage_cmd_ = false;
       response->success = true;
       return;
     default:
-      is_engage_ = false;
+      engage_cmd_ = false;
       response->success = false;
       RCLCPP_ERROR(get_logger(), "Invalid control mode command.");
       return;
@@ -104,6 +104,8 @@ void ControlCommand::actuation_callback(const tier4_vehicle_msgs::msg::Actuation
 void ControlCommand::timer_callback()
 {
   RCLCPP_INFO(get_logger(), "Timer callback");
+  if (!is_engage_)
+    return;
   can_frame_pub_->publish(*steer_ctrl_can_ptr_);
   can_frame_pub_->publish(*throttle_ctrl_can_ptr_);
 }
