@@ -26,9 +26,10 @@ class ControlCommand : public rclcpp::Node
         bool engage_cmd_ = false;
         rclcpp::Publisher<can_msgs::msg::Frame>::SharedPtr can_frame_pub_;
         rclcpp::TimerBase::SharedPtr timer_;
-        uint16_t steer_cmd_;
+        float steer_cmd_;
         uint16_t throttle_cmd_;
         double loop_rate_;
+
 
         /**
          * @brief Actuation command callback (Include throttle, brake, steering)

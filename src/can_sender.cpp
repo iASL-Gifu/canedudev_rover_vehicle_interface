@@ -4,7 +4,7 @@ namespace canedudev_interface
 {
 ControlCommand::ControlCommand(): Node("canedudev_interface")
 {
-  loop_rate_ = declare_parameter("loop_rate", 50.0);
+  loop_rate_ = declare_parameter("loop_rate",10.0);
   //Subscription
   actuation_sub_ = create_subscription<tier4_vehicle_msgs::msg::ActuationCommandStamped>(
     "/control/command/actuation_cmd", 10, std::bind(&canedudev_interface::ControlCommand::actuation_callback, this, std::placeholders::_1));
@@ -78,8 +78,8 @@ void ControlCommand::actuation_callback(const tier4_vehicle_msgs::msg::Actuation
   steer_ctrl_can_msg.dlc = 5;
   steer_ctrl_can_msg.is_extended = false;
   steer_ctrl_can_msg.data[0] = 0; //0:Pulse-width steering mode, 1:Angle steering mode
-  steer_ctrl_can_msg.data[1] = steer_cmd_ & 0xFF;
-  steer_ctrl_can_msg.data[2] = (steer_cmd_ >> 8) & 0xFF;
+  // steer_ctrl_can_msg.data[1] = steer_cmd_ & 0xFF;
+  // steer_ctrl_can_msg.data[2] = (steer_cmd_ >> 8) & 0xFF;
   steer_ctrl_can_ptr_ = std::make_shared<can_msgs::msg::Frame>(steer_ctrl_can_msg);
   
   // Throttle
@@ -104,11 +104,30 @@ void ControlCommand::actuation_callback(const tier4_vehicle_msgs::msg::Actuation
 void ControlCommand::timer_callback()
 {
   RCLCPP_INFO(get_logger(), "Timer callback");
-  if (!is_engage_)
-    return;
+  // if (!is_engage_)
+  //   return;
+
+  steer_cmd_ = 80.0; 
+  uint8_t  bytes[4];
+  std::memcpy(bytes, &steer_cmd_, sizeof(steer_cmd_));
+  can_msgs::msg::Frame steer_ctrl_can_msg;
+  steer_ctrl_can_msg.header.stamp = get_clock()->now();
+  steer_ctrl_can_msg.header.frame_id = "can";
+   
+  steer_ctrl_can_msg.id = 0x100;
+  steer_ctrl_can_msg.dlc = 5;
+  steer_ctrl_can_msg.is_extended = false;
+  steer_ctrl_can_msg.data[0] = 1; //0:Pulse-width steering mode, 1:Angle steering mode
+  steer_ctrl_can_msg.data[1] = bytes[0];
+  steer_ctrl_can_msg.data[2] = bytes[1];
+  steer_ctrl_can_msg.data[3] = bytes[2]; 
+  steer_ctrl_can_msg.data[4] = bytes[3];
+  steer_ctrl_can_ptr_ = std::make_shared<can_msgs::msg::Frame>(steer_ctrl_can_msg);
+  
   can_frame_pub_->publish(*steer_ctrl_can_ptr_);
-  can_frame_pub_->publish(*throttle_ctrl_can_ptr_);
+  // can_frame_pub_->publish(*throttle_ctrl_can_ptr_);
 }
+
 }//namespace
 
 
