@@ -7,8 +7,13 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 ament_auto_find_build_dependencies()
-ament_auto_add_executable(canedudev_interface 
-DIRECTORY src include)
+
+ament_auto_add_executable(canedudev_interface_receiver
+src/can_receiver.cpp)
+
+ament_auto_add_executable(canedudev_interface_sender
+src/can_sender.cpp
+)
 
 ament_auto_package(INSTALL_TO_SHARE
 launch
