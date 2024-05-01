@@ -19,7 +19,8 @@ class VehicleReport : public rclcpp::Node
         std::string frame_id_;
         rclcpp::Subscription<can_msgs::msg::Frame>::SharedPtr can_frame_sub_;
         void can_frame_callback(const can_msgs::msg::Frame::SharedPtr msg);
-        float bytesToFloat(uint8_t b0, uint8_t b1, uint8_t b2, uint8_t b3);
+        float steer_bytesToFloat(uint8_t b0, uint8_t b1, uint8_t b2, uint8_t b3);
+        uint16_t throttle_bytesToFloat(uint8_t b0, uint8_t b1);
 
 
 };  

@@ -16,5 +16,13 @@
     <arg name="timeout_sec" value="$(var sender_timeout_sec)" />
     <arg name="enable_can_fd" value="$(var enable_can_fd)" />
   </include>
+  
+  <node pkg="canedudev_interface" exec="canedudev_interface_receiver">
+    <remap from="/input/can_rx" to="/from_can_bus"/>
+  </node>
+
+  <node pkg="canedudev_interface" exec="canedudev_interface_sender" >
+    <remap from="/output/can_tx" to="/to_can_bus"/>
+  </node>
 
 </launch>
