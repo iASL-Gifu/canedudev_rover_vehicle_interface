@@ -8,6 +8,8 @@ VehicleReport::VehicleReport(): Node("vehicle_report_node")
     //Subscription
     can_frame_sub_ = create_subscription<can_msgs::msg::Frame>(
         "/input/can_rx", 10, std::bind(&canedudev_interface::VehicleReport::can_frame_callback, this, std::placeholders::_1));
+    steering_report_pub_ = create_publisher<autoware_auto_vehicle_msgs::msg::SteeringReport>("/vehicle/steering_report", rclcpp::QoS(1));
+    throttle_report_pub_ = create_publisher<std_msgs::msg::UInt16>("/vehicle/throttle_report", rclcpp::QoS(1));
 }
 
 void VehicleReport::can_frame_callback(const can_msgs::msg::Frame::SharedPtr msg)
@@ -19,22 +21,24 @@ void VehicleReport::can_frame_callback(const can_msgs::msg::Frame::SharedPtr msg
     {
         case 0x100://Steering
         {
-            autoware_auto_vehicle_msgs::msg::GearCommand gear_msg;
+            autoware_auto_vehicle_msgs::msg::SteeringReport steer_msg;
+            steer_msg.stamp = get_clock()->now();
+            steer_msg.steering_tire_angle = steer_bytesToFloat(msg->data[1], msg->data[2], msg->data[3], msg->data[4]);
             // RCLCPP_INFO(get_logger(), "Received steering command");
-            RCLCPP_INFO(get_logger(), "Steering mode: %d", msg->data[0]);
-            float steer_deg = steer_bytesToFloat(msg->data[1], msg->data[2], msg->data[3], msg->data[4]);
-
-            RCLCPP_INFO(get_logger(), "Steering angle: %f", steer_deg);
+            // RCLCPP_INFO(get_logger(), "Steering mode: %d", msg->data[0]);
+            // float steer_deg = steer_bytesToFloat(msg->data[1], msg->data[2], msg->data[3], msg->data[4]);
+            // RCLCPP_INFO(get_logger(), "Steering angle: %f", steer_deg);
+            steering_report_pub_->publish(steer_msg);
             break;
         }
         case 0x101://throttle
         {
-            autoware_auto_vehicle_msgs::msg::GearCommand gear_msg;
+            std_msgs::msg::UInt16 throttle_msg;
+            throttle_msg.data = throttle_bytesToFloat(msg->data[1], msg->data[2]);
+            throttle_report_pub_->publish(throttle_msg);
             // RCLCPP_INFO(get_logger(), "Received steering command");
-            RCLCPP_INFO(get_logger(), "throttle mode: %d", msg->data[0]);
-            uint16_t steer_deg =throttle_bytesToFloat(msg->data[1], msg->data[2]);
-
-            RCLCPP_INFO(get_logger(), "Steering angle: %d", steer_deg);
+            // RCLCPP_INFO(get_logger(), "throttle mode: %d", msg->data[0]);
+            // RCLCPP_INFO(get_logger(), "throttle msg: %d", throttle_msg.data);
             break;
         }
     }
