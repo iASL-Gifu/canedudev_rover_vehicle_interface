@@ -23,6 +23,7 @@
 
   <node pkg="canedudev_interface" exec="canedudev_interface_sender" >
     <remap from="/output/can_tx" to="/to_can_bus"/>
+    <param name="loop_rate" value="100.0" />
   </node>
 
 </launch>
