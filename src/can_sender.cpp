@@ -67,26 +67,40 @@ void ControlCommand::actuation_callback(const tier4_vehicle_msgs::msg::Actuation
 {
   if(!is_engage_)
     return;
-  // Do something with the received message
   RCLCPP_INFO(get_logger(), "Received actuation command");
   // Steering
-  if (500< msg->actuation.steer_cmd && msg->actuation.steer_cmd <2500)
-    steer_cmd_ = (int16_t)msg->actuation.steer_cmd; //all float
+  if (-90.0< msg->actuation.steer_cmd && msg->actuation.steer_cmd < 90.0)
+    float steer_cmd_ = (float)msg->actuation.steer_cmd; //all float
+
   can_msgs::msg::Frame steer_ctrl_can_msg;
   steer_ctrl_can_msg.header.stamp = msg->header.stamp;
   steer_ctrl_can_msg.id = 0x100;
   steer_ctrl_can_msg.dlc = 5;
   steer_ctrl_can_msg.is_extended = false;
-  steer_ctrl_can_msg.data[0] = 0; //0:Pulse-width steering mode, 1:Angle steering mode
-  // steer_ctrl_can_msg.data[1] = steer_cmd_ & 0xFF;
-  // steer_ctrl_can_msg.data[2] = (steer_cmd_ >> 8) & 0xFF;
+  steer_ctrl_can_msg.data[0] = 1; //0:Pulse-width steering mode, 1:Angle steering mode
+  steer_ctrl_can_msg.data[1] =  steer_cmd_ & 0xFF;
+  steer_ctrl_can_msg.data[2] = (steer_cmd_ >> 8) & 0xFF;
+  steer_ctrl_can_msg.data[3] = (steer_cmd_ >> 16) & 0xFF;
+  steer_ctrl_can_msg.data[4] = (steer_cmd_ >> 24) & 0xFF;
+  
   steer_ctrl_can_ptr_ = std::make_shared<can_msgs::msg::Frame>(steer_ctrl_can_msg);
   
   // Throttle
-  // TO-DO: Handle msg->actuation.brake_cmd_
-  if (1000 < msg->actuation.accel_cmd && msg->actuation.accel_cmd < 2000)
-    throttle_cmd_ = (int16_t)msg->actuation.accel_cmd;
-
+  if (is_drive_ == true){
+    if (0 < msg->actuation.accel_cmd && msg->actuation.accel_cmd < 500)
+      throttle_cmd_ = (int16_t)msg->actuation.accel_cmd + 1500;
+    else if (0 < msg->actuation.brake_cmd && msg->actuation.brake_cmd < 500)
+      throttle_cmd_ = 1500 - (int16_t)msg->actuation.brake_cmd;
+  }
+  else if(is_reverse_ == true){
+    if (0 < msg->actuation.accel_cmd && msg->actuation.accel_cmd < 500)
+      throttle_cmd_ = 1500 - (int16_t)msg->actuation.brake_cmd;
+    else if (0 < msg->actuation.brake_cmd && msg->actuation.brake_cmd < 500)
+      throttle_cmd_ = (int16_t)msg->actuation.accel_cmd + 1500;
+  }
+  else{
+    throttle_cmd_ = 1500;
+  }
   can_msgs::msg::Frame throttle_ctrl_can_msg;
   throttle_ctrl_can_msg.header.stamp = msg->header.stamp;
   throttle_ctrl_can_msg.id = 0x101;
@@ -97,37 +111,49 @@ void ControlCommand::actuation_callback(const tier4_vehicle_msgs::msg::Actuation
   throttle_ctrl_can_msg.data[2] = (throttle_cmd_ >> 8) & 0xFF;
   throttle_ctrl_can_ptr_ = std::make_shared<can_msgs::msg::Frame>(throttle_ctrl_can_msg);
 
-
 }
 
 
 void ControlCommand::timer_callback()
 {
   RCLCPP_INFO(get_logger(), "Timer callback");
-  // if (!is_engage_)
-  //   return;
+  if (!is_engage_)
+    return;
 
-  steer_cmd_ = 80.0; 
-  uint8_t  bytes[4];
-  std::memcpy(bytes, &steer_cmd_, sizeof(steer_cmd_));
-  can_msgs::msg::Frame steer_ctrl_can_msg;
-  steer_ctrl_can_msg.header.stamp = get_clock()->now();
-  steer_ctrl_can_msg.header.frame_id = "can";
+  // can_msgs::msg::Frame steer_ctrl_can_msg;
+  // steer_ctrl_can_msg.header.stamp = get_clock()->now();
+  // steer_ctrl_can_msg.header.frame_id = "can";
    
-  steer_ctrl_can_msg.id = 0x100;
-  steer_ctrl_can_msg.dlc = 5;
-  steer_ctrl_can_msg.is_extended = false;
-  steer_ctrl_can_msg.data[0] = 1; //0:Pulse-width steering mode, 1:Angle steering mode
-  steer_ctrl_can_msg.data[1] = bytes[0];
-  steer_ctrl_can_msg.data[2] = bytes[1];
-  steer_ctrl_can_msg.data[3] = bytes[2]; 
-  steer_ctrl_can_msg.data[4] = bytes[3];
-  steer_ctrl_can_ptr_ = std::make_shared<can_msgs::msg::Frame>(steer_ctrl_can_msg);
+  // steer_ctrl_can_msg.id = 0x100;
+  // steer_ctrl_can_msg.dlc = 5;
+  // steer_ctrl_can_msg.is_extended = false;
+  // steer_ctrl_can_msg.data[0] = 1; //0:Pulse-width steering mode, 1:Angle steering mode
+
+  // steer_cmd_ = 80.01234;
+  // uint8_t  bytes[4];
+  // std::memcpy(bytes, &steer_cmd_, sizeof(steer_cmd_));
+  // steer_ctrl_can_msg.data[1] = bytes[0];
+  // steer_ctrl_can_msg.data[2] = bytes[1];
+  // steer_ctrl_can_msg.data[3] = bytes[2]; 
+  // steer_ctrl_can_msg.data[4] = bytes[3];
+
+  // float steer = ControlCommand::steer_bytesToFloat(bytes[0], bytes[1], bytes[2], bytes[3]);
+  // RCLCPP_INFO(get_logger(), "Steering angle: %f", steer);
+  // steer_ctrl_can_ptr_ = std::make_shared<can_msgs::msg::Frame>(steer_ctrl_can_msg);
   
   can_frame_pub_->publish(*steer_ctrl_can_ptr_);
-  // can_frame_pub_->publish(*throttle_ctrl_can_ptr_);
+  can_frame_pub_->publish(*throttle_ctrl_can_ptr_);
 }
 
+float ControlCommand::steer_bytesToFloat(uint8_t b0, uint8_t b1, uint8_t b2, uint8_t b3) {
+    uint32_t value = (static_cast<uint32_t>(b3) << 24) |
+                     (static_cast<uint32_t>(b2) << 16) |
+                     (static_cast<uint32_t>(b1) <<  8) |
+                     (static_cast<uint32_t>(b0));
+    float result;
+    std::memcpy(&result, &value, sizeof(float));
+    return result;
+}
 }//namespace
 
 

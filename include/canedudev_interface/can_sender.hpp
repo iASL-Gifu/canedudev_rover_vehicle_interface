@@ -20,16 +20,16 @@ class ControlCommand : public rclcpp::Node
         rclcpp::Service<autoware_auto_vehicle_msgs::srv::ControlModeCommand>::SharedPtr control_mode_server_;
         can_msgs::msg::Frame::ConstSharedPtr steer_ctrl_can_ptr_;
         can_msgs::msg::Frame::ConstSharedPtr throttle_ctrl_can_ptr_;
-        bool is_engage_;
-        bool is_drive_;
-        bool is_reverse_;
+        bool is_engage_  = false;
+        bool is_drive_   = false;
+        bool is_reverse_ = false;
         bool engage_cmd_ = false;
         rclcpp::Publisher<can_msgs::msg::Frame>::SharedPtr can_frame_pub_;
         rclcpp::TimerBase::SharedPtr timer_;
-        float steer_cmd_;
         uint16_t throttle_cmd_;
         double loop_rate_;
 
+        float steer_bytesToFloat(uint8_t b0, uint8_t b1, uint8_t b2, uint8_t b3);
 
         /**
          * @brief Actuation command callback (Include throttle, brake, steering)
