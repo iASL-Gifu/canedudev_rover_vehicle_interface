@@ -16,6 +16,7 @@ ControlCommand::ControlCommand(): Node("canedudev_interface")
   
   //Publisher
   can_frame_pub_ = create_publisher<can_msgs::msg::Frame>("/output/can_tx", rclcpp::QoS(1));
+  control_mode_report_pub_ = create_publisher<autoware_auto_vehicle_msgs::msg::ControlModeReport>("/control/report/control_mode_report", rclcpp::QoS(1));
   timer_ = create_timer(this, get_clock(), rclcpp::Rate(loop_rate_).period(), std::bind(&canedudev_interface::ControlCommand::timer_callback, this));
 }
 
@@ -69,8 +70,8 @@ void ControlCommand::actuation_callback(const tier4_vehicle_msgs::msg::Actuation
     return;
   RCLCPP_INFO(get_logger(), "Received actuation command");
   // Steering
-  if (-90.0< msg->actuation.steer_cmd && msg->actuation.steer_cmd < 90.0)
-    float steer_cmd_ = (float)msg->actuation.steer_cmd; //all float
+  if (-90.0 < msg->actuation.steer_cmd && msg->actuation.steer_cmd < 90.0)
+    steer_cmd_ = (float)msg->actuation.steer_cmd; //all float
 
   can_msgs::msg::Frame steer_ctrl_can_msg;
   steer_ctrl_can_msg.header.stamp = msg->header.stamp;
@@ -78,10 +79,10 @@ void ControlCommand::actuation_callback(const tier4_vehicle_msgs::msg::Actuation
   steer_ctrl_can_msg.dlc = 5;
   steer_ctrl_can_msg.is_extended = false;
   steer_ctrl_can_msg.data[0] = 1; //0:Pulse-width steering mode, 1:Angle steering mode
-  steer_ctrl_can_msg.data[1] =  steer_cmd_ & 0xFF;
-  steer_ctrl_can_msg.data[2] = (steer_cmd_ >> 8) & 0xFF;
-  steer_ctrl_can_msg.data[3] = (steer_cmd_ >> 16) & 0xFF;
-  steer_ctrl_can_msg.data[4] = (steer_cmd_ >> 24) & 0xFF;
+  steer_ctrl_can_msg.data[1] =  steer_cmd_bit_ & 0xFF;
+  steer_ctrl_can_msg.data[2] = (steer_cmd_bit_ >> 8) & 0xFF;
+  steer_ctrl_can_msg.data[3] = (steer_cmd_bit_ >> 16) & 0xFF;
+  steer_ctrl_can_msg.data[4] = (steer_cmd_bit_ >> 24) & 0xFF;
   
   steer_ctrl_can_ptr_ = std::make_shared<can_msgs::msg::Frame>(steer_ctrl_can_msg);
   
@@ -117,9 +118,13 @@ void ControlCommand::actuation_callback(const tier4_vehicle_msgs::msg::Actuation
 void ControlCommand::timer_callback()
 {
   RCLCPP_INFO(get_logger(), "Timer callback");
-  if (!is_engage_)
+  if(!is_engage_){
+    autoware_auto_vehicle_msgs::msg::ControlModeReport control_mode_report;
+    control_mode_report.stamp = get_clock()->now();
+    control_mode_report.mode = autoware_auto_vehicle_msgs::msg::ControlModeReport::MANUAL;
+    control_mode_report_pub_->publish(control_mode_report);
     return;
-
+  }
   // can_msgs::msg::Frame steer_ctrl_can_msg;
   // steer_ctrl_can_msg.header.stamp = get_clock()->now();
   // steer_ctrl_can_msg.header.frame_id = "can";
@@ -143,6 +148,10 @@ void ControlCommand::timer_callback()
   
   can_frame_pub_->publish(*steer_ctrl_can_ptr_);
   can_frame_pub_->publish(*throttle_ctrl_can_ptr_);
+  autoware_auto_vehicle_msgs::msg::ControlModeReport control_mode_report;
+  control_mode_report.stamp = get_clock()->now();
+  control_mode_report.mode = autoware_auto_vehicle_msgs::msg::ControlModeReport::AUTONOMOUS;
+  control_mode_report_pub_->publish(control_mode_report);
 }
 
 float ControlCommand::steer_bytesToFloat(uint8_t b0, uint8_t b1, uint8_t b2, uint8_t b3) {

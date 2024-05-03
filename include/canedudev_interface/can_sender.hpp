@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <memory>
 #include <autoware_auto_vehicle_msgs/msg/gear_command.hpp>
+#include <autoware_auto_vehicle_msgs/msg/control_mode_report.hpp>
 #include <autoware_auto_vehicle_msgs/srv/control_mode_command.hpp>
 #include <tier4_vehicle_msgs/msg/actuation_command_stamped.hpp>
 #include <autoware_adapi_v1_msgs/msg/operation_mode_state.hpp>
@@ -25,8 +26,11 @@ class ControlCommand : public rclcpp::Node
         bool is_reverse_ = false;
         bool engage_cmd_ = false;
         rclcpp::Publisher<can_msgs::msg::Frame>::SharedPtr can_frame_pub_;
+        rclcpp::Publisher<autoware_auto_vehicle_msgs::msg::ControlModeReport>::SharedPtr control_mode_report_pub_;
         rclcpp::TimerBase::SharedPtr timer_;
         uint16_t throttle_cmd_;
+        float steer_cmd_;
+        int steer_cmd_bit_ = *((int*) &steer_cmd_);
         double loop_rate_;
 
         float steer_bytesToFloat(uint8_t b0, uint8_t b1, uint8_t b2, uint8_t b3);
