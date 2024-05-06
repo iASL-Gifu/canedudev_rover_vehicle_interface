@@ -18,7 +18,7 @@ void ControlCommandbyParam::actuation_callback()
 {
   // RCLCPP_INFO(get_logger(), "Received actuation command");
   // Steering
-  RCLCPP_INFO(get_logger(), "Steer_cmd: %f", steer_cmd_);
+  // RCLCPP_INFO(get_logger(), "Steer_cmd: %f", steer_cmd_);
   can_msgs::msg::Frame steer_ctrl_can_msg;
   steer_ctrl_can_msg.header.stamp = this->get_clock()->now();
   steer_ctrl_can_msg.id = 0x100;
@@ -33,7 +33,7 @@ void ControlCommandbyParam::actuation_callback()
   steer_ctrl_can_ptr_ = std::make_shared<can_msgs::msg::Frame>(steer_ctrl_can_msg);
   
   //throttle
-  RCLCPP_INFO(get_logger(), "Throttle_cmd: %d", throttle_cmd_);
+  // RCLCPP_INFO(get_logger(), "Throttle_cmd: %d", throttle_cmd_);
   can_msgs::msg::Frame throttle_ctrl_can_msg;
   throttle_ctrl_can_msg.header.stamp = this->get_clock()->now();
   throttle_ctrl_can_msg.id = 0x101;
@@ -49,7 +49,7 @@ void ControlCommandbyParam::actuation_callback()
 
 void ControlCommandbyParam::timer_callback()
 {
-  // RCLCPP_INFO(get_logger(), "Timer callback");
+  RCLCPP_INFO(get_logger(), "Timer callback");
   actuation_callback();
   
   can_frame_pub_->publish(*steer_ctrl_can_ptr_);
