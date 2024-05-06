@@ -15,6 +15,10 @@ ament_auto_add_executable(canedudev_interface_sender
 src/can_sender.cpp
 )
 
+ament_auto_add_executable(canedudev_interface_sender_by_param 
+src/can_sender_by_param.cpp
+)
+
 ament_auto_package(INSTALL_TO_SHARE
 launch
 params)
