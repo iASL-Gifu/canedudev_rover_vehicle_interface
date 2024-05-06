@@ -6,10 +6,12 @@
 #include <std_msgs/msg/u_int16.hpp>
 #include <autoware_auto_vehicle_msgs/msg/gear_command.hpp>
 #include <autoware_auto_vehicle_msgs/msg/steering_report.hpp>
+#include <autoware_auto_vehicle_msgs/msg/velocity_report.hpp>
 #include <autoware_auto_vehicle_msgs/srv/control_mode_command.hpp>
 #include <tier4_vehicle_msgs/msg/battery_status.hpp>
 #include <tier4_vehicle_msgs/msg/actuation_command_stamped.hpp>
 #include <autoware_adapi_v1_msgs/msg/operation_mode_state.hpp>
+#include <cmath>
 namespace canedudev_interface
 {
 class VehicleReport : public rclcpp::Node
@@ -22,9 +24,10 @@ class VehicleReport : public rclcpp::Node
     private:
         double loop_rate_;
         std::string frame_id_;
+        float steer_angle_ = 0.0;
         rclcpp::Subscription<can_msgs::msg::Frame>::SharedPtr can_frame_sub_;
         rclcpp::Publisher<autoware_auto_vehicle_msgs::msg::SteeringReport>::SharedPtr steering_report_pub_;
-        rclcpp::Publisher<std_msgs::msg::UInt16>::SharedPtr throttle_report_pub_;
+        rclcpp::Publisher<autoware_auto_vehicle_msgs::msg::VelocityReport>::SharedPtr velocity_report_pub_;
         rclcpp::Publisher<tier4_vehicle_msgs::msg::BatteryStatus>::SharedPtr battery_report_pub_;
         void can_frame_callback(const can_msgs::msg::Frame::SharedPtr msg);
 

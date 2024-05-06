@@ -9,7 +9,7 @@ VehicleReport::VehicleReport(): Node("vehicle_report_node")
     can_frame_sub_ = create_subscription<can_msgs::msg::Frame>(
         "/input/can_rx", 10, std::bind(&canedudev_interface::VehicleReport::can_frame_callback, this, std::placeholders::_1));
     steering_report_pub_ = create_publisher<autoware_auto_vehicle_msgs::msg::SteeringReport>("/vehicle/steering_report", rclcpp::QoS(1));
-    throttle_report_pub_ = create_publisher<std_msgs::msg::UInt16>("/vehicle/throttle_report", rclcpp::QoS(1));
+    velocity_report_pub_ = create_publisher<autoware_auto_vehicle_msgs::msg::VelocityReport>("/vehicle/velocity_report", rclcpp::QoS(1));
     battery_report_pub_  = create_publisher<tier4_vehicle_msgs::msg::BatteryStatus>("/vehicle/battery_report", rclcpp::QoS(1));
 }
 
@@ -20,11 +20,12 @@ void VehicleReport::can_frame_callback(const can_msgs::msg::Frame::SharedPtr msg
 
     switch (msg->id)
     {
-        case 0x100://Steering
+        case 0x100: //Steering
         {
+            steer_angle_ = steer_bytesToFloat(msg->data[1], msg->data[2], msg->data[3], msg->data[4]);
             autoware_auto_vehicle_msgs::msg::SteeringReport steer_msg;
             steer_msg.stamp = get_clock()->now();
-            steer_msg.steering_tire_angle = steer_bytesToFloat(msg->data[1], msg->data[2], msg->data[3], msg->data[4]);
+            steer_msg.steering_tire_angle =  steer_angle_;
             // RCLCPP_INFO(get_logger(), "Received steering command");
             // RCLCPP_INFO(get_logger(), "Steering mode: %d", msg->data[0]);
             // float steer_deg = steer_bytesToFloat(msg->data[1], msg->data[2], msg->data[3], msg->data[4]);
@@ -32,11 +33,28 @@ void VehicleReport::can_frame_callback(const can_msgs::msg::Frame::SharedPtr msg
             steering_report_pub_->publish(steer_msg);
             break;
         }
-        case 0x101://throttle
+        case 0x101: //throttle
         {
-            std_msgs::msg::UInt16 throttle_msg;
-            throttle_msg.data = Two_bytesToUint16(msg->data[1], msg->data[2]);
-            throttle_report_pub_->publish(throttle_msg);
+            autoware_auto_vehicle_msgs::msg::VelocityReport vel_report_msg;
+            uint16_t vel_rpm;
+            vel_rpm = Two_bytesToUint16(msg->data[1], msg->data[2]);
+            // RCLCPP_INFO(get_logger(), "Velocity rpm: %d", vel_rpm);
+
+            // TO-DO Separate Drive and Reverse
+            float velocity;
+            if (vel_rpm == 1500)
+                velocity = 0;
+            else
+                velocity = 30 / (500 * abs(vel_rpm -1500) * 3.6);
+            // RCLCPP_INFO(get_logger(), "Velocity: %f", velocity);  
+            vel_report_msg.header.stamp = get_clock()->now();
+
+            vel_report_msg.longitudinal_velocity = velocity * sin(steer_angle_);
+            vel_report_msg.lateral_velocity      = velocity * cos(steer_angle_);
+            vel_report_msg.heading_rate          = 0;
+
+
+            velocity_report_pub_->publish(vel_report_msg);
             // RCLCPP_INFO(get_logger(), "Received steering command");
             // RCLCPP_INFO(get_logger(), "throttle mode: %d", msg->data[0]);
             // RCLCPP_INFO(get_logger(), "throttle msg: %d", throttle_msg.data);
@@ -53,6 +71,19 @@ void VehicleReport::can_frame_callback(const can_msgs::msg::Frame::SharedPtr msg
             // RCLCPP_INFO(get_logger(), "battery mode: %d", msg->data[0]);
             break;
         }
+        case 0x203: //Servo Voltage
+            break;
+        case 0x204: //Servo Current
+            break;
+        case 0x200: //BATTERY_CELL_VOLTAGE
+            break;
+        case 0x201: //BATTERY_REGURATED_OUTPUT_ENVELOPE
+            break;
+        case 0x202: //BATTERY_BATTERT_OUTPUT_ENVELOPE
+            break;
+        default:
+            RCLCPP_INFO(get_logger(), "Unknown CAN ID: %d", msg->id);
+            break;
     }
 }
 
