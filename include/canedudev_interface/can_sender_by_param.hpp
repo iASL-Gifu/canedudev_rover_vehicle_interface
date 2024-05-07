@@ -23,7 +23,6 @@ class ControlCommandbyParam : public rclcpp::Node
         rclcpp::TimerBase::SharedPtr timer_;
         uint16_t throttle_cmd_;
         float steer_cmd_;
-        int steer_cmd_bit_ = *((int*) &steer_cmd_);
         double loop_rate_;
         OnSetParametersCallbackHandle::SharedPtr set_param_res_; 
         float steer_bytesToFloat(uint8_t b0, uint8_t b1, uint8_t b2, uint8_t b3);

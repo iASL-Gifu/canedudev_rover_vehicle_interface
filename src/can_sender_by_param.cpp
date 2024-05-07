@@ -20,6 +20,9 @@ void ControlCommandbyParam::actuation_callback()
   // Steering
   // RCLCPP_INFO(get_logger(), "Steer_cmd: %f", steer_cmd_);
   can_msgs::msg::Frame steer_ctrl_can_msg;
+  // int steer_cmd_bit_ = *((int*) &steer_cmd_);
+  uint32_t steer_cmd_bit_;
+  std::memcpy(&steer_cmd_bit_, &steer_cmd_, sizeof(float));
   steer_ctrl_can_msg.header.stamp = this->get_clock()->now();
   steer_ctrl_can_msg.id = 0x100;
   steer_ctrl_can_msg.dlc = 5;
@@ -49,7 +52,7 @@ void ControlCommandbyParam::actuation_callback()
 
 void ControlCommandbyParam::timer_callback()
 {
-  RCLCPP_INFO(get_logger(), "Timer callback");
+  // RCLCPP_INFO(get_logger(), "Timer callback");
   actuation_callback();
   
   can_frame_pub_->publish(*steer_ctrl_can_ptr_);
