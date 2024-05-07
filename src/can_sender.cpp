@@ -72,6 +72,8 @@ void ControlCommand::actuation_callback(const tier4_vehicle_msgs::msg::Actuation
   // Steering
   if (-90.0 < msg->actuation.steer_cmd && msg->actuation.steer_cmd < 90.0)
     steer_cmd_ = (float)msg->actuation.steer_cmd; //all float
+  uint32_t steer_cmd_bit_;
+  std::memcpy(&steer_cmd_bit_, &steer_cmd_, sizeof(float));
 
   can_msgs::msg::Frame steer_ctrl_can_msg;
   steer_ctrl_can_msg.header.stamp = msg->header.stamp;
