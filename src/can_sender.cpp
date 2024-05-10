@@ -24,7 +24,7 @@ void ControlCommand::onControlModeRequest(
   const autoware_auto_vehicle_msgs::srv::ControlModeCommand::Request::SharedPtr request,
   const autoware_auto_vehicle_msgs::srv::ControlModeCommand::Response::SharedPtr response)
 {
-  RCLCPP_INFO(get_logger(), "Received control mode command: %d", request->mode);
+  // RCLCPP_INFO(get_logger(), "Received control mode command: %d", request->mode);
   switch (request->mode)
   {
     case autoware_auto_vehicle_msgs::srv::ControlModeCommand::Request::AUTONOMOUS:
@@ -46,7 +46,7 @@ void ControlCommand::onControlModeRequest(
 
 void ControlCommand::gear_cmd_callback(const autoware_auto_vehicle_msgs::msg::GearCommand::SharedPtr msg)
 {
-  RCLCPP_INFO(get_logger(), "Received gear command");
+  // RCLCPP_INFO(get_logger(), "Received gear command");
   switch (msg->command)
   {
     case 2://DRIVE
@@ -68,7 +68,7 @@ void ControlCommand::actuation_callback(const tier4_vehicle_msgs::msg::Actuation
 {
   if(!is_engage_)
     return;
-  RCLCPP_INFO(get_logger(), "Received actuation command");
+  // RCLCPP_INFO(get_logger(), "Received actuation command");
   // Steering
   if (-90.0 < msg->actuation.steer_cmd && msg->actuation.steer_cmd < 90.0)
     steer_cmd_ = (float)msg->actuation.steer_cmd; //all float
@@ -119,7 +119,7 @@ void ControlCommand::actuation_callback(const tier4_vehicle_msgs::msg::Actuation
 
 void ControlCommand::timer_callback()
 {
-  RCLCPP_INFO(get_logger(), "Timer callback");
+  // RCLCPP_INFO(get_logger(), "Timer callback");
   if(!is_engage_){
     autoware_auto_vehicle_msgs::msg::ControlModeReport control_mode_report;
     control_mode_report.stamp = get_clock()->now();
