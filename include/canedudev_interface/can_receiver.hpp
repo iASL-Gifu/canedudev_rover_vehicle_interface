@@ -7,6 +7,8 @@
 #include <autoware_auto_vehicle_msgs/msg/gear_command.hpp>
 #include <autoware_auto_vehicle_msgs/msg/steering_report.hpp>
 #include <autoware_auto_vehicle_msgs/msg/velocity_report.hpp>
+#include <autoware_auto_vehicle_msgs/msg/gear_report.hpp>
+#include <autoware_auto_vehicle_msgs/msg/control_mode_report.hpp>
 #include <autoware_auto_vehicle_msgs/srv/control_mode_command.hpp>
 #include <tier4_vehicle_msgs/msg/battery_status.hpp>
 #include <tier4_vehicle_msgs/msg/actuation_command_stamped.hpp>
@@ -29,6 +31,8 @@ class VehicleReport : public rclcpp::Node
         rclcpp::Publisher<autoware_auto_vehicle_msgs::msg::SteeringReport>::SharedPtr steering_report_pub_;
         rclcpp::Publisher<autoware_auto_vehicle_msgs::msg::VelocityReport>::SharedPtr velocity_report_pub_;
         rclcpp::Publisher<tier4_vehicle_msgs::msg::BatteryStatus>::SharedPtr battery_report_pub_;
+        rclcpp::Publisher<autoware_auto_vehicle_msgs::msg::GearReport>::SharedPtr gear_mode_report_pub_;
+        rclcpp::Publisher<autoware_auto_vehicle_msgs::msg::ControlModeReport>::SharedPtr control_mode_report_pub_;
         void can_frame_callback(const can_msgs::msg::Frame::SharedPtr msg);
 
 
