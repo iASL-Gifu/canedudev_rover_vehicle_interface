@@ -27,7 +27,7 @@ void VehicleReport::can_frame_callback(const can_msgs::msg::Frame::SharedPtr msg
             steer_angle_ = steer_bytesToFloat(msg->data[1], msg->data[2], msg->data[3], msg->data[4]);
             autoware_auto_vehicle_msgs::msg::SteeringReport steer_msg;
             steer_msg.stamp = get_clock()->now();
-            steer_msg.steering_tire_angle =  steer_angle_;
+            steer_msg.steering_tire_angle =  steer_angle_ * 3.14 / 180 / 17;
             // RCLCPP_INFO(get_logger(), "Received steering command");
             // RCLCPP_INFO(get_logger(), "Steering mode: %d", msg->data[0]);
             // float steer_deg = steer_bytesToFloat(msg->data[1], msg->data[2], msg->data[3], msg->data[4]);
@@ -57,8 +57,10 @@ void VehicleReport::can_frame_callback(const can_msgs::msg::Frame::SharedPtr msg
                 gear_report_msg.report = 2; //drive or reverse()
             // RCLCPP_INFO(get_logger(), "Velocity: %f", velocity);  
             }
-            vel_report_msg.longitudinal_velocity = velocity * sin(steer_angle_);
-            vel_report_msg.lateral_velocity      = velocity * cos(steer_angle_);
+            //vel_report_msg.longitudinal_velocity = velocity * cos(steer_angle_);
+            //vel_report_msg.lateral_velocity      = velocity * sin(steer_angle_);
+            vel_report_msg.longitudinal_velocity = velocity;
+            vel_report_msg.lateral_velocity      = 0;
             vel_report_msg.heading_rate          = 0;
             vel_report_msg.header.frame_id       = "base_link";
 
