@@ -2,9 +2,9 @@
 #include <can_msgs/msg/frame.hpp>
 #include <stdint.h>
 #include <memory>
-#include <autoware_auto_vehicle_msgs/msg/gear_command.hpp>
-#include <autoware_auto_vehicle_msgs/msg/control_mode_report.hpp>
-#include <autoware_auto_vehicle_msgs/srv/control_mode_command.hpp>
+#include <autoware_vehicle_msgs/msg/gear_command.hpp>
+#include <autoware_vehicle_msgs/msg/control_mode_report.hpp>
+#include <autoware_vehicle_msgs/srv/control_mode_command.hpp>
 #include <tier4_vehicle_msgs/msg/actuation_command_stamped.hpp>
 #include <autoware_adapi_v1_msgs/msg/operation_mode_state.hpp>
 namespace canedudev_interface

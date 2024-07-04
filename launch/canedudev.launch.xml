@@ -2,7 +2,7 @@
 
   <arg name="interface" default="can0" />
   <arg name="receiver_interval_sec" default="0.01" />
-  <arg name="sender_timeout_sec" default="0.01" />
+  <arg name="sender_timeout_sec" default="0.03" />
   <arg name="enable_can_fd" default="false" />
 
   <include file="$(find-pkg-share ros2_socketcan)/launch/socket_can_receiver.launch.py">

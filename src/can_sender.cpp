@@ -8,30 +8,30 @@ ControlCommand::ControlCommand(): Node("canedudev_interface")
   //Subscription
   actuation_sub_ = create_subscription<tier4_vehicle_msgs::msg::ActuationCommandStamped>(
     "/control/command/actuation_cmd", 10, std::bind(&canedudev_interface::ControlCommand::actuation_callback, this, std::placeholders::_1));
-  gear_cmd_sub_ = create_subscription<autoware_auto_vehicle_msgs::msg::GearCommand>(
+  gear_cmd_sub_ = create_subscription<autoware_vehicle_msgs::msg::GearCommand>(
     "/control/command/gear_cmd", 10, std::bind(&canedudev_interface::ControlCommand::gear_cmd_callback, this, std::placeholders::_1));
   //Service
-  control_mode_server_ = create_service<autoware_auto_vehicle_msgs::srv::ControlModeCommand>(
+  control_mode_server_ = create_service<autoware_vehicle_msgs::srv::ControlModeCommand>(
     "/control/command/control_mode_cmd", std::bind(&canedudev_interface::ControlCommand::onControlModeRequest, this, std::placeholders::_1, std::placeholders::_2));
   
   //Publisher
   can_frame_pub_ = create_publisher<can_msgs::msg::Frame>("/output/can_tx", rclcpp::QoS(1));
-  control_mode_report_pub_ = create_publisher<autoware_auto_vehicle_msgs::msg::ControlModeReport>("/control/report/control_mode_report", rclcpp::QoS(1));
+  control_mode_report_pub_ = create_publisher<autoware_vehicle_msgs::msg::ControlModeReport>("/control/report/control_mode_report", rclcpp::QoS(1));
   timer_ = create_timer(this, get_clock(), rclcpp::Rate(loop_rate_).period(), std::bind(&canedudev_interface::ControlCommand::timer_callback, this));
 }
 
 void ControlCommand::onControlModeRequest(
-  const autoware_auto_vehicle_msgs::srv::ControlModeCommand::Request::SharedPtr request,
-  const autoware_auto_vehicle_msgs::srv::ControlModeCommand::Response::SharedPtr response)
+  const autoware_vehicle_msgs::srv::ControlModeCommand::Request::SharedPtr request,
+  const autoware_vehicle_msgs::srv::ControlModeCommand::Response::SharedPtr response)
 {
   // RCLCPP_INFO(get_logger(), "Received control mode command: %d", request->mode);
   switch (request->mode)
   {
-    case autoware_auto_vehicle_msgs::srv::ControlModeCommand::Request::AUTONOMOUS:
+    case autoware_vehicle_msgs::srv::ControlModeCommand::Request::AUTONOMOUS:
       engage_cmd_ = true;
       response->success = true;
       return;
-    case autoware_auto_vehicle_msgs::srv::ControlModeCommand::Request::MANUAL:
+    case autoware_vehicle_msgs::srv::ControlModeCommand::Request::MANUAL:
       engage_cmd_ = false;
       response->success = true;
       return;
@@ -44,7 +44,7 @@ void ControlCommand::onControlModeRequest(
 
 }
 
-void ControlCommand::gear_cmd_callback(const autoware_auto_vehicle_msgs::msg::GearCommand::SharedPtr msg)
+void ControlCommand::gear_cmd_callback(const autoware_vehicle_msgs::msg::GearCommand::SharedPtr msg)
 {
   // RCLCPP_INFO(get_logger(), "Received gear command");
   switch (msg->command)
@@ -121,9 +121,9 @@ void ControlCommand::timer_callback()
 {
   // RCLCPP_INFO(get_logger(), "Timer callback");
   if(!is_engage_){
-    autoware_auto_vehicle_msgs::msg::ControlModeReport control_mode_report;
+    autoware_vehicle_msgs::msg::ControlModeReport control_mode_report;
     control_mode_report.stamp = get_clock()->now();
-    control_mode_report.mode = autoware_auto_vehicle_msgs::msg::ControlModeReport::MANUAL;
+    control_mode_report.mode = autoware_vehicle_msgs::msg::ControlModeReport::MANUAL;
     control_mode_report_pub_->publish(control_mode_report);
     return;
   }
@@ -150,9 +150,9 @@ void ControlCommand::timer_callback()
   
   can_frame_pub_->publish(*steer_ctrl_can_ptr_);
   can_frame_pub_->publish(*throttle_ctrl_can_ptr_);
-  autoware_auto_vehicle_msgs::msg::ControlModeReport control_mode_report;
+  autoware_vehicle_msgs::msg::ControlModeReport control_mode_report;
   control_mode_report.stamp = get_clock()->now();
-  control_mode_report.mode = autoware_auto_vehicle_msgs::msg::ControlModeReport::AUTONOMOUS;
+  control_mode_report.mode = autoware_vehicle_msgs::msg::ControlModeReport::AUTONOMOUS;
   control_mode_report_pub_->publish(control_mode_report);
 }
 
