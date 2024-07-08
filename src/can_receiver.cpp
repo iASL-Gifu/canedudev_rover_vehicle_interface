@@ -27,7 +27,7 @@ void VehicleReport::can_frame_callback(const can_msgs::msg::Frame::SharedPtr msg
             steer_angle_ = steer_bytesToFloat(msg->data[1], msg->data[2], msg->data[3], msg->data[4]);
             autoware_vehicle_msgs::msg::SteeringReport steer_msg;
             steer_msg.stamp = get_clock()->now();
-            steer_msg.steering_tire_angle =  steer_angle_ * 3.14 / 180 / 17;
+            steer_msg.steering_tire_angle =  -1.0 * steer_angle_ * 3.14 / 180.0;
             // RCLCPP_INFO(get_logger(), "Received steering command");
             // RCLCPP_INFO(get_logger(), "Steering mode: %d", msg->data[0]);
             // float steer_deg = steer_bytesToFloat(msg->data[1], msg->data[2], msg->data[3], msg->data[4]);
