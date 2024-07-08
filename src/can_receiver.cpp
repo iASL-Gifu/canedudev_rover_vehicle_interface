@@ -53,13 +53,9 @@ void VehicleReport::can_frame_callback(const can_msgs::msg::Frame::SharedPtr msg
                 gear_report_msg.report = 22; //park
             }
             else{
-                velocity = 30 / (500 * abs(vel_rpm -1500) * 3.6);
+                velocity = 30.0 / 3.6 *(fabs(vel_rpm - 1500.0) / 500.0);//m/s 
                 gear_report_msg.report = 2; //drive or reverse()
-            // RCLCPP_INFO(get_logger(), "Velocity: %f", velocity);  
             }
-            //vel_report_msg.longitudinal_velocity = velocity * cos(steer_angle_);
-            //vel_report_msg.lateral_velocity      = velocity * sin(steer_angle_);
-            RCLCPP_INFO(get_logger(), "Velocity: %f", velocity);
             vel_report_msg.longitudinal_velocity = velocity;
             vel_report_msg.lateral_velocity      = 0;
             vel_report_msg.heading_rate          = 0;
