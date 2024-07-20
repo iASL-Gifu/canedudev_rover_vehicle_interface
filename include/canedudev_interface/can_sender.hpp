@@ -7,6 +7,8 @@
 #include <autoware_vehicle_msgs/srv/control_mode_command.hpp>
 #include <tier4_vehicle_msgs/msg/actuation_command_stamped.hpp>
 #include <autoware_adapi_v1_msgs/msg/operation_mode_state.hpp>
+// #include <tier4_external_api_msgs/msg/control_command.hpp>
+#include <autoware_control_msgs/msg/control.hpp>
 namespace canedudev_interface
 {
 class ControlCommand : public rclcpp::Node
@@ -16,7 +18,7 @@ class ControlCommand : public rclcpp::Node
         ControlCommand();
 
     private:
-        rclcpp::Subscription<tier4_vehicle_msgs::msg::ActuationCommandStamped>::SharedPtr actuation_sub_;
+        rclcpp::Subscription<autoware_control_msgs::msg::Control>::SharedPtr actuation_sub_;
         rclcpp::Subscription<autoware_vehicle_msgs::msg::GearCommand>::SharedPtr gear_cmd_sub_;
         rclcpp::Service<autoware_vehicle_msgs::srv::ControlModeCommand>::SharedPtr control_mode_server_;
         can_msgs::msg::Frame::ConstSharedPtr steer_ctrl_can_ptr_;
@@ -31,6 +33,8 @@ class ControlCommand : public rclcpp::Node
         uint16_t throttle_cmd_;
         float steer_cmd_;
         double loop_rate_;
+        int lipo_cells;
+        float max_velocity_;//km/h
 
         float steer_bytesToFloat(uint8_t b0, uint8_t b1, uint8_t b2, uint8_t b3);
 
@@ -39,7 +43,7 @@ class ControlCommand : public rclcpp::Node
          * 
          * @param msg tier4_vehicle_msgs::msg::ActuationCommandStamped
          */
-        void actuation_callback(const tier4_vehicle_msgs::msg::ActuationCommandStamped::SharedPtr msg);
+        void actuation_callback(const autoware_control_msgs::msg::Control::SharedPtr msg);
         /**
          * @brief Gear command callback (Drive or Reverse)
          * 

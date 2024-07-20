@@ -4,10 +4,17 @@ namespace canedudev_interface
 {
 ControlCommand::ControlCommand(): Node("canedudev_interface")
 {
-  loop_rate_ = declare_parameter("loop_rate",10.0);
+  loop_rate_ = declare_parameter("loop_rate",800.0);
+  lipo_cells = declare_parameter("lipo_cells", 4);
+  if (lipo_cells == 4)
+    max_velocity_ = 30.0;
+  else if (lipo_cells == 3)
+    max_velocity_ = 20.0;
+  else
+    max_velocity_ = 10.0;
   //Subscription
-  actuation_sub_ = create_subscription<tier4_vehicle_msgs::msg::ActuationCommandStamped>(
-    "/control/command/actuation_cmd", 10, std::bind(&canedudev_interface::ControlCommand::actuation_callback, this, std::placeholders::_1));
+  actuation_sub_ = create_subscription<autoware_control_msgs::msg::Control>(
+    "/control/command/control_cmd", 10, std::bind(&canedudev_interface::ControlCommand::actuation_callback, this, std::placeholders::_1));
   gear_cmd_sub_ = create_subscription<autoware_vehicle_msgs::msg::GearCommand>(
     "/control/command/gear_cmd", 10, std::bind(&canedudev_interface::ControlCommand::gear_cmd_callback, this, std::placeholders::_1));
   //Service
@@ -64,19 +71,21 @@ void ControlCommand::gear_cmd_callback(const autoware_vehicle_msgs::msg::GearCom
   }
 }
 
-void ControlCommand::actuation_callback(const tier4_vehicle_msgs::msg::ActuationCommandStamped::SharedPtr msg)
+void ControlCommand::actuation_callback(const autoware_control_msgs::msg::Control::SharedPtr msg)
 {
-  if(!is_engage_)
-    return;
+  // if(!is_engage_)
+  //   return;
   // RCLCPP_INFO(get_logger(), "Received actuation command");
   // Steering
-  if (-90.0 < msg->actuation.steer_cmd && msg->actuation.steer_cmd < 90.0)
-    steer_cmd_ = (float)msg->actuation.steer_cmd; //all float
+  if (-45.0 < msg->lateral.steering_tire_angle*57.29 && msg->lateral.steering_tire_angle*57.29 < 45.0){
+    steer_cmd_ = (float)msg->lateral.steering_tire_angle*57.29; //all float
+    RCLCPP_INFO(get_logger(), "Steering angle: %f", steer_cmd_);
+  }
   uint32_t steer_cmd_bit_;
   std::memcpy(&steer_cmd_bit_, &steer_cmd_, sizeof(float));
 
   can_msgs::msg::Frame steer_ctrl_can_msg;
-  steer_ctrl_can_msg.header.stamp = msg->header.stamp;
+  steer_ctrl_can_msg.header.stamp = this->get_clock()->now();
   steer_ctrl_can_msg.id = 0x100;
   steer_ctrl_can_msg.dlc = 5;
   steer_ctrl_can_msg.is_extended = false;
@@ -85,27 +94,31 @@ void ControlCommand::actuation_callback(const tier4_vehicle_msgs::msg::Actuation
   steer_ctrl_can_msg.data[2] = (steer_cmd_bit_ >> 8) & 0xFF;
   steer_ctrl_can_msg.data[3] = (steer_cmd_bit_ >> 16) & 0xFF;
   steer_ctrl_can_msg.data[4] = (steer_cmd_bit_ >> 24) & 0xFF;
-  
   steer_ctrl_can_ptr_ = std::make_shared<can_msgs::msg::Frame>(steer_ctrl_can_msg);
   
   // Throttle
   if (is_drive_ == true){
-    if (0 < msg->actuation.accel_cmd && msg->actuation.accel_cmd < 500)
-      throttle_cmd_ = (int16_t)msg->actuation.accel_cmd + 1500;
-    else if (0 < msg->actuation.brake_cmd && msg->actuation.brake_cmd < 500)
-      throttle_cmd_ = 1500 - (int16_t)msg->actuation.brake_cmd;
+    //Accel
+
+    throttle_cmd_ = (int16_t)(500.0 * ((msg->longitudinal.velocity * 3.3)/max_velocity_)  + 1550); // msg->longitudinal.velocity: m/s
+    RCLCPP_INFO(get_logger(), "Throttle: %d, msg_velo %f", throttle_cmd_, msg->longitudinal.velocity);
+
+    // if (msg->brake == 0.0)
+    //   throttle_cmd_ = (int16_t)msg->longitudinal.velocity/8.0  + 1500;
+    // else
+    //   throttle_cmd_ = 1500 - (int16_t)msg->longitudinal.velocity /8.0* 500;
   }
-  else if(is_reverse_ == true){
-    if (0 < msg->actuation.accel_cmd && msg->actuation.accel_cmd < 500)
-      throttle_cmd_ = 1500 - (int16_t)msg->actuation.brake_cmd;
-    else if (0 < msg->actuation.brake_cmd && msg->actuation.brake_cmd < 500)
-      throttle_cmd_ = (int16_t)msg->actuation.accel_cmd + 1500;
-  }
+  // else if(is_reverse_ == true){
+  //   if (0 < msg->actuation.accel_cmd && msg->actuation.accel_cmd < 500)
+  //     throttle_cmd_ = 1500 - (int16_t)msg->actuation.brake_cmd;
+  //   else if (0 < msg->actuation.brake_cmd && msg->actuation.brake_cmd < 500)
+  //     throttle_cmd_ = (int16_t)msg->actuation.accel_cmd + 1500;
+  // }
   else{
     throttle_cmd_ = 1500;
   }
   can_msgs::msg::Frame throttle_ctrl_can_msg;
-  throttle_ctrl_can_msg.header.stamp = msg->header.stamp;
+  throttle_ctrl_can_msg.header.stamp = this->get_clock()->now();
   throttle_ctrl_can_msg.id = 0x101;
   throttle_ctrl_can_msg.dlc = 5;
   throttle_ctrl_can_msg.is_extended = false;
@@ -127,27 +140,6 @@ void ControlCommand::timer_callback()
     control_mode_report_pub_->publish(control_mode_report);
     return;
   }
-  // can_msgs::msg::Frame steer_ctrl_can_msg;
-  // steer_ctrl_can_msg.header.stamp = get_clock()->now();
-  // steer_ctrl_can_msg.header.frame_id = "can";
-   
-  // steer_ctrl_can_msg.id = 0x100;
-  // steer_ctrl_can_msg.dlc = 5;
-  // steer_ctrl_can_msg.is_extended = false;
-  // steer_ctrl_can_msg.data[0] = 1; //0:Pulse-width steering mode, 1:Angle steering mode
-
-  // steer_cmd_ = 80.01234;
-  // uint8_t  bytes[4];
-  // std::memcpy(bytes, &steer_cmd_, sizeof(steer_cmd_));
-  // steer_ctrl_can_msg.data[1] = bytes[0];
-  // steer_ctrl_can_msg.data[2] = bytes[1];
-  // steer_ctrl_can_msg.data[3] = bytes[2]; 
-  // steer_ctrl_can_msg.data[4] = bytes[3];
-
-  // float steer = ControlCommand::steer_bytesToFloat(bytes[0], bytes[1], bytes[2], bytes[3]);
-  // RCLCPP_INFO(get_logger(), "Steering angle: %f", steer);
-  // steer_ctrl_can_ptr_ = std::make_shared<can_msgs::msg::Frame>(steer_ctrl_can_msg);
-  
   can_frame_pub_->publish(*steer_ctrl_can_ptr_);
   can_frame_pub_->publish(*throttle_ctrl_can_ptr_);
   autoware_vehicle_msgs::msg::ControlModeReport control_mode_report;

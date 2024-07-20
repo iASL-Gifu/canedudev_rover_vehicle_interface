@@ -53,7 +53,7 @@ void VehicleReport::can_frame_callback(const can_msgs::msg::Frame::SharedPtr msg
                 gear_report_msg.report = 22; //park
             }
             else{
-                velocity = 30.0 / 3.6 *(fabs(vel_rpm - 1500.0) / 500.0);//m/s 
+                velocity = 30.0 / 3.6 *(fabs(vel_rpm - 1500.0) / 500.0);//m/s  seisi joutai 1550
                 gear_report_msg.report = 2; //drive or reverse()
             }
             vel_report_msg.longitudinal_velocity = velocity;

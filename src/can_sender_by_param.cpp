@@ -4,11 +4,12 @@ namespace canedudev_interface
 {
 ControlCommandbyParam::ControlCommandbyParam(): Node("canedudev_interface")
 {
-  loop_rate_ = declare_parameter("loop_rate",10.0);
+  loop_rate_ = declare_parameter("loop_rate",500);
+  RCLCPP_INFO(get_logger(), "Loop rate: %d", loop_rate_);
   //Publisher
   can_frame_pub_ = create_publisher<can_msgs::msg::Frame>("/output/can_tx", rclcpp::QoS(1));
   timer_ = create_timer(this, get_clock(), rclcpp::Rate(loop_rate_).period(), std::bind(&canedudev_interface::ControlCommandbyParam::timer_callback, this));
-  steer_cmd_    = declare_parameter_with_min_max("steer_cmd", 0.0, -90.0, 90.0, "Steering command", "Steering command in degree");
+  steer_cmd_    = declare_parameter_with_min_max("steer_cmd", 0.0, -40.0, 40.0, "Steering command", "Steering command in degree");
   throttle_cmd_  = (uint16_t)declare_parameter_with_min_max("throttle_cmd", 1500, 0, 2000, "Throttle command", "Throttle command in pulse-width");
   set_param_res_ = add_on_set_parameters_callback(std::bind(&ControlCommandbyParam::onParameter, this, std::placeholders::_1));
 }
