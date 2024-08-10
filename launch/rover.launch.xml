@@ -1,0 +1,33 @@
+<launch>
+
+  <node pkg="rover_interface" exec="vehicle_sender" name="vehicle_sender" output="screen">
+    <remap from="/output/throttle" to="/output/throttle"/>
+    <remap from="/output/steering" to="/output/steering"/>
+    
+  </node>
+
+  <node pkg="rover_interface" exec="vehicle_receiver" name="vehicle_receiver" output="screen">
+
+    <param name="loop_rate"  value="300.0" />
+    <param name="velocity_threshold"  value="0.03" />
+    <remap from="/input/velocity" to="/sensing/imu/xsens/filter/velocity"/>
+    <remap from="/input/steering" to="steering_send"/>
+    
+  </node>
+
+  <node pkg="rover_interface" exec="sender_bridge" name="sender_bridge" output="screen">
+    <remap from="throttle_pub" to="throttle_send"/>
+    <remap from="steering_pub" to="steering_send"/>
+    <remap from="battery_pub" to="battery_send"/>
+
+    <remap from="throttle_sub" to="/output/throttle"/>
+    <remap from="steering_sub" to="/output/steering"/>
+    
+  </node>
+
+  <include file="$(find-pkg-share rover_ros_driver)/launch/rover_ros_driver.launch.xml">
+    
+  </include>
+
+  
+</launch>
