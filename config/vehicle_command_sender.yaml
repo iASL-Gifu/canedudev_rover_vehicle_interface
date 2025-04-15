@@ -1,0 +1,10 @@
+/**:
+  ros__parameters:
+    throttle_limit: 97.0
+    steering_limit: 43.0
+
+    manual_button: 4
+    throttle_plus_button: 7
+    throttle_minus_button: 6
+    throttle_axes: 1
+    steering_axes: 2

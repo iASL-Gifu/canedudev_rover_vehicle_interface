@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>rover_interface</name>
+  <name>canedudev_rover_vehicle_interface</name>
   <version>0.0.0</version>
   <description>TODO: Package description</description>
-  <maintainer email="ky.37f.9850@s.thers.ac.jp">arata22</maintainer>
-  <license>TODO: License declaration</license>
+  <maintainer email="hayashi.hyt2001@icloud.com">apollo-22</maintainer>
+  <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
@@ -14,11 +14,11 @@
 
   <depend>rclcpp</depend>
   <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
   <depend>sensor_msgs</depend>
   <depend>autoware_control_msgs</depend>
   <depend>autoware_vehicle_msgs</depend>
   <depend>tier4_vehicle_msgs</depend>
-  
 
   <export>
     <build_type>ament_cmake</build_type>

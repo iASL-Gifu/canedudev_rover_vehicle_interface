@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(rover_interface)
+project(canedudev_rover_vehicle_interface)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -9,60 +9,42 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
-find_package(sensor_msgs)
+find_package(geometry_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
 find_package(autoware_control_msgs REQUIRED)
 find_package(autoware_vehicle_msgs REQUIRED)
-find_package(tier4_vehicle_msgs)
+find_package(tier4_vehicle_msgs REQUIRED)
 
-#sender
-add_executable(vehicle_sender src/vehicle_sender.cpp)
-
-target_link_libraries(vehicle_sender
-  ${CANLIB_LIBRARY}
+include_directories(
+  include
 )
 
-ament_target_dependencies(vehicle_sender
+add_executable(vehicle_command_sender src/vehicle_command_sender.cpp)
+ament_target_dependencies(vehicle_command_sender
   rclcpp
   std_msgs
+  sensor_msgs
   autoware_control_msgs
   autoware_vehicle_msgs
 )
 
-#receiver
-add_executable(vehicle_receiver src/vehicle_receiver.cpp)
-
-target_link_libraries(vehicle_receiver
-  ${CANLIB_LIBRARY}
-)
-
-ament_target_dependencies(vehicle_receiver
+add_executable(vehicle_state_receiver src/vehicle_state_receiver.cpp)
+ament_target_dependencies(vehicle_state_receiver
   rclcpp
   std_msgs
-  autoware_control_msgs
+  geometry_msgs
   autoware_vehicle_msgs
   tier4_vehicle_msgs
 )
 
-#bridge
-add_executable(sender_bridge src/sender_bridge.cpp)
-
-target_link_libraries(sender_bridge
-  ${CANLIB_LIBRARY}
-)
-
-ament_target_dependencies(sender_bridge
-  rclcpp
-  sensor_msgs
-  std_msgs
-)
-
-install(TARGETS sender_bridge
-  vehicle_sender
-  vehicle_receiver
+install(TARGETS
+  vehicle_command_sender
+  vehicle_state_receiver
   DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY
-  launch
-  DESTINATION share/${PROJECT_NAME}
-)
+  include
+  config
+  DESTINATION share/${PROJECT_NAME})
+
 ament_package()
