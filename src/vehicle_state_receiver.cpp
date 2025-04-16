@@ -10,11 +10,11 @@ VehicleStateReceiver::VehicleStateReceiver()
 {
   // Initialize parameters
   this->declare_parameter("loop_rate", 10.0);
-  this->declare_parameter("throttle_threshold", 0.1);
+  this->declare_parameter("velocity_threshold", 0.1);
   this->declare_parameter("battery_cell_count", 4);
 
   loop_rate_ = this->get_parameter("loop_rate").as_double();
-  throttle_threshold_ = this->get_parameter("throttle_threshold").as_double();
+  velocity_threshold_ = this->get_parameter("velocity_threshold").as_double();
   battery_cell_count_ = this->get_parameter("battery_cell_count").as_double();
 
   // Initialize publishers
@@ -48,9 +48,9 @@ void VehicleStateReceiver::state_timer_callback()
   // Velocity
   double velocity_value = velocity_;
   auto velocity_msgs = VelocityReport();
-  velocity_msgs.stamp = this->get_clock()->now();
+  velocity_msgs.header.stamp = this->get_clock()->now();
   velocity_msgs.header.frame_id = "base_link";
-  velocity_msgs.longitudinal_velocity_mps = velocity_value;
+  velocity_msgs.longitudinal_velocity = velocity_value;
   velocity_msgs.lateral_velocity = 0.0;
   velocity_msgs.heading_rate = 0.0;
   velocity_pub_->publish(velocity_msgs);
