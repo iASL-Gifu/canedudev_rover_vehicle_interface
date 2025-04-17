@@ -62,9 +62,8 @@ void VehicleCommandSender::joy_callback(const sensor_msgs::msg::Joy::SharedPtr m
     double throttle_value = msg->axes[throttle_axes_];
     double steering_value = msg->axes[steering_axes_];
 
-    // Throttle value: negative for forward, positive for reverse
-    double throttle = -throttle_value * throttle_factor_ * throttle_limit_;
-    double steering = steering_value * steering_limit_;
+    double throttle = -1 * throttle_value * throttle_factor_ * throttle_limit_;
+    double steering = -1 * steering_value * steering_limit_;
 
     send_control_command(throttle, steering);
   } else {

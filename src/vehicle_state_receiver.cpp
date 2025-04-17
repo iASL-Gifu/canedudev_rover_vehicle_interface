@@ -15,7 +15,7 @@ VehicleStateReceiver::VehicleStateReceiver()
 
   loop_rate_ = this->get_parameter("loop_rate").as_double();
   velocity_threshold_ = this->get_parameter("velocity_threshold").as_double();
-  battery_cell_count_ = this->get_parameter("battery_cell_count").as_double();
+  battery_cell_count_ = this->get_parameter("battery_cell_count").as_int();
 
   // Initialize publishers
   velocity_pub_ = this->create_publisher<VelocityReport>("/vehicle/status/velocity_status", 10);
@@ -34,7 +34,7 @@ VehicleStateReceiver::VehicleStateReceiver()
     std::bind(&VehicleStateReceiver::steering_callback, this, std::placeholders::_1));
 
   battery_sub_ = this->create_subscription<std_msgs::msg::UInt32>(
-    "/rover/battery_monitor_control_system/battery_output/voltage_mV ", 10,
+    "/rover/battery_monitor_control_system/battery_output/voltage_mV", 10,
     std::bind(&VehicleStateReceiver::battery_callback, this, std::placeholders::_1));
 
   // Initialize timer
